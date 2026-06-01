@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Štatistika – Testy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --card: #13161e;
+    --card2: #181c27;
+    --border: #252a38;
+    --accent: #4f8ef7;
+    --accent2: #a78bfa;
+    --accent3: #34d399;
+    --accent4: #f472b6;
+    --accent5: #fbbf24;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --code: #1e2433;
+    --correct: #34d399;
+    --wrong: #f87171;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 20px;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    padding: 48px 20px 36px;
+    position: relative;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 200px;
+    background: radial-gradient(ellipse, rgba(79,142,247,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 700;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .header p { color: var(--muted); font-size: 0.95rem; }
+
+  /* NAV TABS */
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 24px 0;
+    padding: 0 20px;
+  }
+  .nav button {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    padding: 7px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .nav button:hover { border-color: var(--accent); color: var(--accent); }
+  .nav button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* SECTIONS */
+  .section { display: none; max-width: 900px; margin: 0 auto; }
+  .section.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+  /* SEC TITLE */
+  .sec-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.1rem;
+    color: var(--accent);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .sec-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .div { height: 1px; background: var(--border); margin: 16px 0; }
+
+  /* ═══════════════════════════════
+     HOME PAGE
+  ═══════════════════════════════ */
+  .modes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .mode-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .mode-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .mode-card:hover { transform: translateY(-2px); }
+  .mode-card:hover::before { opacity: 1; }
+  .mode-card.mc::before { background: radial-gradient(circle at top left, rgba(79,142,247,0.08), transparent 60%); }
+  .mode-card.tf::before { background: radial-gradient(circle at top left, rgba(52,211,153,0.08), transparent 60%); }
+  .mode-card.match::before { background: radial-gradient(circle at top left, rgba(167,139,250,0.08), transparent 60%); }
+  .mode-card.fill::before { background: radial-gradient(circle at top left, rgba(251,191,36,0.08), transparent 60%); }
+  .mode-card.speed::before { background: radial-gradient(circle at top left, rgba(244,114,182,0.08), transparent 60%); }
+  .mode-card.mc { border-color: rgba(79,142,247,0.3); }
+  .mode-card.mc:hover { border-color: var(--accent); }
+  .mode-card.tf { border-color: rgba(52,211,153,0.3); }
+  .mode-card.tf:hover { border-color: var(--accent3); }
+  .mode-card.match { border-color: rgba(167,139,250,0.3); }
+  .mode-card.match:hover { border-color: var(--accent2); }
+  .mode-card.fill { border-color: rgba(251,191,36,0.3); }
+  .mode-card.fill:hover { border-color: var(--accent5); }
+  .mode-card.speed { border-color: rgba(244,114,182,0.3); }
+  .mode-card.speed:hover { border-color: var(--accent4); }
+  .mode-icon { font-size: 2rem; margin-bottom: 10px; display: block; }
+  .mode-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    letter-spacing: 1px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .mode-card.mc .mode-title { color: var(--accent); }
+  .mode-card.tf .mode-title { color: var(--accent3); }
+  .mode-card.match .mode-title { color: var(--accent2); }
+  .mode-card.fill .mode-title { color: var(--accent5); }
+  .mode-card.speed .mode-title { color: var(--accent4); }
+  .mode-desc { font-size: 0.83rem; color: var(--muted); line-height: 1.5; }
+
+  /* TOPIC SELECT */
+  .topic-select-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .topic-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+  }
+  .topic-btn:hover { border-color: var(--accent); }
+  .topic-btn.selected { background: rgba(79,142,247,0.1); border-color: var(--accent); }
+  .topic-btn .tnum {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .topic-btn .tname { font-size: 0.85rem; color: var(--text); font-weight: 500; }
+
+  .start-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    padding: 12px 28px;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    display: block;
+    margin: 0 auto;
+  }
+  .start-btn:hover { background: #3a7de8; transform: translateY(-1px); }
+  .start-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ═══════════════════════════════
+     QUIZ SHARED
+  ═══════════════════════════════ */
+  .quiz-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .quiz-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+  .quiz-score-box {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  .q-stat {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .q-stat span { color: var(--text); font-size: 0.85rem; }
+  .progress-bar {
+    width: 100%;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .question-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .question-text {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 4px;
+  }
+  .question-sub {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+
+  /* MC OPTIONS */
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.18s;
+    text-align: left;
+    font-size: 0.88rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: inherit;
+  }
+  .opt-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(79,142,247,0.06); }
+  .opt-btn .opt-letter {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    width: 22px; height: 22px;
+    border-radius: 4px;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--muted);
+    transition: all 0.18s;
+  }
+  .opt-btn:hover:not(:disabled) .opt-letter { background: var(--accent); color: #fff; }
+  .opt-btn.correct { background: rgba(52,211,153,0.1); border-color: var(--correct); }
+  .opt-btn.correct .opt-letter { background: var(--correct); color: #000; }
+  .opt-btn.wrong { background: rgba(248,113,113,0.1); border-color: var(--wrong); }
+  .opt-btn.wrong .opt-letter { background: var(--wrong); color: #fff; }
+  .opt-btn:disabled { cursor: default; }
+
+  .feedback {
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+    display: none;
+    animation: fadeIn 0.2s ease;
+  }
+  .feedback.show { display: flex; gap: 10px; align-items: flex-start; }
+  .feedback.ok { background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.25); color: #94a3b8; }
+  .feedback.err { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25); color: #94a3b8; }
+  .feedback strong { color: var(--text); }
+
+  .next-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    padding: 10px 24px;
+    border-radius: 7px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    display: none;
+  }
+  .next-btn.show { display: inline-block; }
+  .next-btn:hover { background: var(--accent); color: #fff; }
+
+  /* ═══════════════════════════════
+     TRUE / FALSE
+  ═══════════════════════════════ */
+  .tf-buttons { display: flex; gap: 12px; margin-top: 4px; }
+  .tf-btn {
+    flex: 1;
+    padding: 18px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    background: var(--card2);
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .tf-btn.t-btn { color: var(--accent3); }
+  .tf-btn.f-btn { color: var(--accent4); }
+  .tf-btn.t-btn:hover:not(:disabled) { background: rgba(52,211,153,0.1); border-color: var(--accent3); }
+  .tf-btn.f-btn:hover:not(:disabled) { background: rgba(244,114,182,0.1); border-color: var(--accent4); }
+  .tf-btn.correct { border-color: var(--correct); background: rgba(52,211,153,0.12); }
+  .tf-btn.wrong { border-color: var(--wrong); background: rgba(248,113,113,0.12); }
+  .tf-btn:disabled { cursor: default; }
+
+  /* ═══════════════════════════════
+     MATCHING
+  ═══════════════════════════════ */
+  .match-area {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .match-col-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .match-item {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.18s;
+    margin-bottom: 6px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .match-item:hover { border-color: var(--accent2); }
+  .match-item.selected { background: rgba(167,139,250,0.12); border-color: var(--accent2); }
+  .match-item.matched-ok { background: rgba(52,211,153,0.1); border-color: var(--correct); color: var(--correct); cursor: default; }
+  .match-item.matched-err { background: rgba(248,113,113,0.1); border-color: var(--wrong); cursor: default; }
+  .match-item.disabled { cursor: default; opacity: 0.5; }
+  .match-check-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    padding: 10px 24px;
+    border-radius: 7px;
+    border: 1px solid var(--accent2);
+    background: transparent;
+    color: var(--accent2);
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    margin-right: 10px;
+  }
+  .match-check-btn:hover { background: var(--accent2); color: #fff; }
+
+  /* ═══════════════════════════════
+     FILL IN THE BLANK
+  ═══════════════════════════════ */
+  .fill-input {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.9rem;
+    background: var(--code);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    padding: 10px 14px;
+    width: 100%;
+    margin-top: 14px;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .fill-input:focus { border-color: var(--accent5); }
+  .fill-input.correct { border-color: var(--correct); background: rgba(52,211,153,0.06); }
+  .fill-input.wrong { border-color: var(--wrong); background: rgba(248,113,113,0.06); }
+  .fill-submit {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    padding: 10px 24px;
+    border-radius: 7px;
+    border: 1px solid var(--accent5);
+    background: transparent;
+    color: var(--accent5);
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    margin-top: 10px;
+  }
+  .fill-submit:hover { background: var(--accent5); color: #000; }
+  .fill-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+  .hint-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  /* ═══════════════════════════════
+     SPEED QUIZ
+  ═══════════════════════════════ */
+  .timer-ring-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+  .timer-ring {
+    position: relative;
+    width: 70px;
+    height: 70px;
+  }
+  .timer-ring svg { transform: rotate(-90deg); }
+  .timer-ring circle {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 4;
+  }
+  .timer-ring .progress-c {
+    stroke: var(--accent4);
+    stroke-dasharray: 188;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 0.1s linear, stroke 0.3s;
+    stroke-linecap: round;
+  }
+  .timer-num {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Space Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent4);
+  }
+  .speed-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .speed-opt {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.85rem;
+    color: var(--text);
+    font-family: inherit;
+    text-align: center;
+  }
+  .speed-opt:hover:not(:disabled) { border-color: var(--accent4); background: rgba(244,114,182,0.06); }
+  .speed-opt.correct { background: rgba(52,211,153,0.1); border-color: var(--correct); color: var(--correct); }
+  .speed-opt.wrong { background: rgba(248,113,113,0.1); border-color: var(--wrong); color: var(--wrong); }
+  .speed-opt:disabled { cursor: default; }
+  .streak-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(244,114,182,0.12);
+    border: 1px solid rgba(244,114,182,0.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent4);
+  }
+
+  /* ═══════════════════════════════
+     RESULTS SCREEN
+  ═══════════════════════════════ */
+  .results-screen {
+    text-align: center;
+    padding: 40px 20px;
+    animation: fadeIn 0.4s ease;
+  }
+  .results-score {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(3rem, 10vw, 5rem);
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent3), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+    line-height: 1;
+  }
+  .results-label { font-size: 0.85rem; color: var(--muted); margin-bottom: 24px; }
+  .results-stats {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .r-stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 20px;
+    min-width: 90px;
+  }
+  .r-stat .rv {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .r-stat .rn { font-size: 0.72rem; color: var(--muted); }
+  .rv.green { color: var(--accent3); }
+  .rv.red { color: var(--wrong); }
+  .rv.blue { color: var(--accent); }
+  .results-message {
+    font-size: 1rem;
+    color: var(--text);
+    margin-bottom: 24px;
+    padding: 14px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: inline-block;
+  }
+  .results-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-retry {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    padding: 11px 24px;
+    border-radius: 7px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+  }
+  .btn-retry:hover { background: #3a7de8; }
+  .btn-home {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    padding: 11px 24px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+  }
+  .btn-home:hover { border-color: var(--text); color: var(--text); }
+  .wrong-list {
+    text-align: left;
+    max-width: 600px;
+    margin: 24px auto 0;
+  }
+  .wrong-list h4 {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--wrong);
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .wrong-item {
+    background: var(--card);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 7px;
+    padding: 10px 14px;
+    margin-bottom: 7px;
+    font-size: 0.83rem;
+  }
+  .wrong-item .wi-q { color: var(--text); margin-bottom: 4px; }
+  .wrong-item .wi-a { font-family: 'Space Mono', monospace; font-size: 0.78rem; color: var(--accent3); }
+  .wrong-item .wi-y { font-family: 'Space Mono', monospace; font-size: 0.78rem; color: var(--wrong); }
+
+  /* ═══════════════════════════════
+     ALERT
+  ═══════════════════════════════ */
+  .alert {
+    border-radius: 8px; padding: 12px 16px; font-size: 0.85rem; margin-bottom: 14px;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .alert-blue { background: rgba(79,142,247,0.08); border: 1px solid rgba(79,142,247,0.25); }
+  .alert .ico { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+  .alert .content { color: #94a3b8; line-height: 1.5; }
+  .alert .content strong { color: var(--text); }
+
+  @media (max-width: 600px) {
+    .match-area { grid-template-columns: 1fr; }
+    .speed-opts { grid-template-columns: 1fr; }
+    body { padding: 12px; }
+    .tf-buttons { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>ŠTATISTIKA · TESTY</h1>
+  <p>Vyber herný formát a otestuj svoje znalosti</p>
+</div>
+
+<nav class="nav">
+  <button class="active" onclick="showSection('home',this)">🏠 Domov</button>
+  <button onclick="showSection('mc',this)">🎯 Multiple Choice</button>
+  <button onclick="showSection('tf',this)">⚡ Pravda / Lož</button>
+  <button onclick="showSection('match',this)">🔗 Spájanie pojmov</button>
+  <button onclick="showSection('fill',this)">✍️ Doplň vzorec</button>
+  <button onclick="showSection('speed',this)">⏱️ Speed Quiz</button>
+</nav>
+
+<!-- ═══ HOME ═══ -->
+<section class="section active" id="home">
+  <div class="sec-title"><span class="dot"></span>HERNÉ FORMÁTY</div>
+  <div class="modes-grid">
+    <div class="mode-card mc" onclick="showSection('mc', document.querySelectorAll('.nav button')[1])">
+      <span class="mode-icon">🎯</span>
+      <div class="mode-title">MULTIPLE CHOICE</div>
+      <div class="mode-desc">Klasický test — vyber správnu odpoveď zo 4 možností. Dostaneš vysvetlenie ku každej otázke.</div>
+    </div>
+    <div class="mode-card tf" onclick="showSection('tf', document.querySelectorAll('.nav button')[2])">
+      <span class="mode-icon">⚡</span>
+      <div class="mode-title">PRAVDA / LOŽ</div>
+      <div class="mode-desc">Rýchly formát — rozhodni, či je tvrdenie pravdivé alebo nepravdivé.</div>
+    </div>
+    <div class="mode-card match" onclick="showSection('match', document.querySelectorAll('.nav button')[3])">
+      <span class="mode-icon">🔗</span>
+      <div class="mode-title">SPÁJANIE POJMOV</div>
+      <div class="mode-desc">Spoj pojem s jeho definíciou alebo vzorcom. Trénuje pamäť a porozumenie.</div>
+    </div>
+    <div class="mode-card fill" onclick="showSection('fill', document.querySelectorAll('.nav button')[4])">
+      <span class="mode-icon">✍️</span>
+      <div class="mode-title">DOPLŇ VZOREC</div>
+      <div class="mode-desc">Napíš správny vzorec alebo kľúčový výraz z pamäti. Hintové slová pomôžu.</div>
+    </div>
+    <div class="mode-card speed" onclick="showSection('speed', document.querySelectorAll('.nav button')[5])">
+      <span class="mode-icon">⏱️</span>
+      <div class="mode-title">SPEED QUIZ</div>
+      <div class="mode-desc">Odpovedaj pred vypršaním časovača! Buduj streak a zbieraj body za rýchlosť.</div>
+    </div>
+  </div>
+  <div class="alert alert-blue">
+    <span class="ico">💡</span>
+    <div class="content"><strong>Tip:</strong> Začni s Multiple Choice ak si nový, alebo vyskúšaj Speed Quiz na rýchle opakovanie pred skúškou. Otázky sú náhodne miešané pri každom štarte.</div>
+  </div>
+</section>
+
+<!-- ═══ MULTIPLE CHOICE ═══ -->
+<section class="section" id="mc">
+  <div id="mc-topic-screen">
+    <div class="sec-title"><span class="dot"></span>MULTIPLE CHOICE — VYBER TÉMU</div>
+    <div class="topic-select-grid" id="mc-topics"></div>
+    <div style="text-align:center;margin-bottom:8px;font-size:0.82rem;color:var(--muted)">Vyber tému (alebo všetky)</div>
+    <button class="start-btn" id="mc-start-btn" onclick="startMC()">ŠTART →</button>
+  </div>
+  <div id="mc-quiz-screen" style="display:none">
+    <div class="quiz-header">
+      <div class="quiz-title" id="mc-topic-label">MULTIPLE CHOICE</div>
+      <div class="quiz-score-box">
+        <div class="q-stat">Otázka <span id="mc-qnum">1</span>/<span id="mc-qtotal">10</span></div>
+        <div class="q-stat">✅ <span id="mc-correct-count">0</span></div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="mc-progress" style="width:0%"></div></div>
+    <div class="question-card">
+      <div class="question-num" id="mc-qnum-label">OTÁZKA 01</div>
+      <div class="question-text" id="mc-question"></div>
+      <div class="question-sub" id="mc-sub" style="display:none"></div>
+    </div>
+    <div class="options" id="mc-options"></div>
+    <div class="feedback" id="mc-feedback"></div>
+    <button class="next-btn" id="mc-next" onclick="mcNext()">ĎALŠIA →</button>
+  </div>
+  <div id="mc-results" style="display:none"></div>
+</section>
+
+<!-- ═══ TRUE / FALSE ═══ -->
+<section class="section" id="tf">
+  <div id="tf-start-screen">
+    <div class="sec-title"><span class="dot"></span>PRAVDA / LOŽ</div>
+    <div class="alert alert-blue">
+      <span class="ico">⚡</span>
+      <div class="content">Rýchly formát — prečítaj tvrdenie a rozhodni: <strong>PRAVDA</strong> alebo <strong>LOŽ</strong>. Dostaneš okamžitú spätnú väzbu.</div>
+    </div>
+    <button class="start-btn" onclick="startTF()">ŠTART →</button>
+  </div>
+  <div id="tf-quiz-screen" style="display:none">
+    <div class="quiz-header">
+      <div class="quiz-title">PRAVDA / LOŽ</div>
+      <div class="quiz-score-box">
+        <div class="q-stat">Otázka <span id="tf-qnum">1</span>/<span id="tf-qtotal">15</span></div>
+        <div class="q-stat">✅ <span id="tf-correct-count">0</span></div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="tf-progress" style="width:0%"></div></div>
+    <div class="question-card">
+      <div class="question-num" id="tf-qnum-label">TVRDENIE 01</div>
+      <div class="question-text" id="tf-question"></div>
+    </div>
+    <div class="tf-buttons">
+      <button class="tf-btn t-btn" id="tf-true" onclick="answerTF(true)">✓ PRAVDA</button>
+      <button class="tf-btn f-btn" id="tf-false" onclick="answerTF(false)">✗ LOŽ</button>
+    </div>
+    <div class="feedback" id="tf-feedback" style="margin-top:12px"></div>
+    <button class="next-btn" id="tf-next" onclick="tfNext()" style="margin-top:12px">ĎALŠIA →</button>
+  </div>
+  <div id="tf-results" style="display:none"></div>
+</section>
+
+<!-- ═══ MATCHING ═══ -->
+<section class="section" id="match">
+  <div id="match-start-screen">
+    <div class="sec-title"><span class="dot"></span>SPÁJANIE POJMOV</div>
+    <div class="alert alert-blue">
+      <span class="ico">🔗</span>
+      <div class="content">Klikni na pojem vľavo, potom na správnu definíciu vpravo. Správne spojenia zostanú zvýraznené zelenou.</div>
+    </div>
+    <button class="start-btn" onclick="startMatch()">ŠTART →</button>
+  </div>
+  <div id="match-quiz-screen" style="display:none">
+    <div class="quiz-header">
+      <div class="quiz-title">SPÁJANIE POJMOV</div>
+      <div class="quiz-score-box">
+        <div class="q-stat">Kolo <span id="match-round">1</span>/4</div>
+        <div class="q-stat">✅ <span id="match-score">0</span> pármi</div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="match-progress" style="width:0%"></div></div>
+    <div class="match-area">
+      <div>
+        <div class="match-col-title">POJEM</div>
+        <div id="match-left"></div>
+      </div>
+      <div>
+        <div class="match-col-title">DEFINÍCIA / VZOREC</div>
+        <div id="match-right"></div>
+      </div>
+    </div>
+    <button class="next-btn" id="match-next" onclick="matchNext()" style="display:none;margin-top:8px">ĎALŠIE KOLO →</button>
+  </div>
+  <div id="match-results" style="display:none"></div>
+</section>
+
+<!-- ═══ FILL IN THE BLANK ═══ -->
+<section class="section" id="fill">
+  <div id="fill-start-screen">
+    <div class="sec-title"><span class="dot"></span>DOPLŇ VZOREC / POJEM</div>
+    <div class="alert alert-blue">
+      <span class="ico">✍️</span>
+      <div class="content">Napíš správnu odpoveď z pamäti. Odpovede nie sú case-sensitive. Na nápovedu klikni 💡.</div>
+    </div>
+    <button class="start-btn" onclick="startFill()">ŠTART →</button>
+  </div>
+  <div id="fill-quiz-screen" style="display:none">
+    <div class="quiz-header">
+      <div class="quiz-title">DOPLŇ VZOREC</div>
+      <div class="quiz-score-box">
+        <div class="q-stat">Otázka <span id="fill-qnum">1</span>/<span id="fill-qtotal">12</span></div>
+        <div class="q-stat">✅ <span id="fill-correct-count">0</span></div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="fill-progress" style="width:0%"></div></div>
+    <div class="question-card">
+      <div class="question-num" id="fill-qnum-label">OTÁZKA 01</div>
+      <div class="question-text" id="fill-question"></div>
+      <div class="question-sub" id="fill-category"></div>
+      <input class="fill-input" id="fill-input" placeholder="Napíš odpoveď..." autocomplete="off" onkeydown="if(event.key==='Enter')submitFill()">
+      <div class="hint-text" id="fill-hint" style="display:none"></div>
+    </div>
+    <div class="feedback" id="fill-feedback"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <button class="fill-submit" id="fill-submit-btn" onclick="submitFill()">SKONTROLOVAŤ</button>
+      <button class="fill-submit" onclick="showHint()" style="border-color:var(--muted);color:var(--muted)">💡 NÁPOVEDA</button>
+      <button class="next-btn" id="fill-next" onclick="fillNext()">ĎALŠIA →</button>
+    </div>
+  </div>
+  <div id="fill-results" style="display:none"></div>
+</section>
+
+<!-- ═══ SPEED QUIZ ═══ -->
+<section class="section" id="speed">
+  <div id="speed-start-screen">
+    <div class="sec-title"><span class="dot"></span>SPEED QUIZ</div>
+    <div class="alert alert-blue">
+      <span class="ico">⏱️</span>
+      <div class="content"><strong>15 sekúnd</strong> na každú otázku. Za rýchlu správnu odpoveď získaš bonus body. Buduj streak pre multiplikátor!</div>
+    </div>
+    <button class="start-btn" onclick="startSpeed()">ŠTART →</button>
+  </div>
+  <div id="speed-quiz-screen" style="display:none">
+    <div class="quiz-header">
+      <div class="quiz-title">SPEED QUIZ</div>
+      <div class="quiz-score-box">
+        <div class="q-stat">Body: <span id="speed-score-display">0</span></div>
+        <div class="streak-badge">🔥 <span id="speed-streak">0</span> streak</div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="speed-progress" style="width:0%"></div></div>
+    <div class="timer-ring-wrap">
+      <div class="timer-ring">
+        <svg viewBox="0 0 60 60" width="70" height="70">
+          <circle cx="30" cy="30" r="26"/>
+          <circle class="progress-c" id="speed-ring" cx="30" cy="30" r="26"/>
+        </svg>
+        <div class="timer-num" id="speed-timer">15</div>
+      </div>
+    </div>
+    <div class="question-card">
+      <div class="question-num" id="speed-qnum-label">OTÁZKA 01 / 20</div>
+      <div class="question-text" id="speed-question"></div>
+    </div>
+    <div class="speed-opts" id="speed-options"></div>
+    <div class="feedback" id="speed-feedback" style="margin-top:10px"></div>
+  </div>
+  <div id="speed-results" style="display:none"></div>
+</section>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════
+
+const TOPICS = [
+  { id: 'basics', label: '01 · Základy' },
+  { id: 'measures', label: '02 · Miery polohy a variability' },
+  { id: 'intervals', label: '03 · Intervaly spoľahlivosti' },
+  { id: 'tests', label: '04 · Štatistické testy' },
+  { id: 'anova', label: '05 · ANOVA' },
+  { id: 'regcor', label: '06 · Regresia & Korelácia' },
+  { id: 'timeseries', label: '07 · Časové rady' },
+  { id: 'prob', label: '08 · Pravdepodobnosť' },
+  { id: 'all', label: '🔀 Všetky témy' },
+];
+
+const MC_QUESTIONS = [
+  // BASICS
+  { topic:'basics', q:'Čo je to štatistika?', opts:['Veda o metódach kvantitatívneho hodnotenia hromadných javov','Veda o individuálnych pozorovaniach','Metóda na meranie fyzikálnych veličín','Matematická teória množín'], a:0, exp:'Štatistika = veda o metódach kvantitatívneho hodnotenia vlastností hromadných javov.' },
+  { topic:'basics', q:'Čo vyjadruje relatívna početnosť fᵢ?', opts:['Počet výskytov hodnoty i','Podiel počtu výskytov na celkovom počte (nᵢ/n)','Súčet všetkých hodnôt','Rozdiel medzi max a min hodnotou'], a:1, exp:'fᵢ = nᵢ / n — relatívna početnosť je podiel absolútnej početnosti na celkovom rozsahu súboru.' },
+  { topic:'basics', q:'Aký typ grafu zobrazuje kvartily a odľahlé hodnoty?', opts:['Histogram','Koláčový diagram','Boxplot','Polygón'], a:2, exp:'Boxplot (krabicový diagram) zobrazuje Q1, Q2 (medián), Q3, IQR a odľahlé hodnoty.' },
+  { topic:'basics', q:'Aký je rozdiel medzi diskrétnou a spojitou premennou?', opts:['Diskrétna má nekonečno hodnôt, spojitá konečno','Diskrétna má konečný počet hodnôt, spojitá nekonečný počet v intervale','Diskrétna je vždy celé číslo, spojitá desatinné','Nie je žiaden rozdiel'], a:1, exp:'Diskrétna: konečný počet hodnôt (napr. počet detí). Spojitá: nekonečný počet hodnôt v intervale (napr. výška).' },
+  { topic:'basics', q:'Čo je to inferenčná štatistika?', opts:['Opisuje a sumarizuje dáta pomocou grafov','Skúma výberový súbor a robí závery o základnom súbore','Meria fyzikálne vlastnosti látok','Počíta priemery a rozptyly'], a:1, exp:'Inferenčná štatistika = robí závery o základnom súbore (populácii) na základe výberu.' },
+  { topic:'basics', q:'Čo je populácia (základný súbor)?', opts:['Vybrané jednotky pre výskum','Súbor všetkých štatistických jednotiek','Len číselné hodnoty v datasete','Priemerná hodnota dát'], a:1, exp:'Základný súbor (populácia) = súbor VŠETKÝCH štatistických jednotiek, o ktorých robíme závery.' },
+  // MEASURES
+  { topic:'measures', q:'Ktorý priemer je citlivý na extrémne hodnoty?', opts:['Harmonický priemer','Geometrický priemer','Aritmetický priemer','Medián'], a:2, exp:'Aritmetický priemer je citlivý na odľahlé hodnoty — jeden extrém môže výrazne skresliť výsledok.' },
+  { topic:'measures', q:'Čo je IQR (medzikvartilové rozpätie)?', opts:['Q1 × Q3','Q3 − Q1','(Q1 + Q3) / 2','Q2 − Q1'], a:1, exp:'IQR = Q3 − Q1 — opisuje variabilitu stredných 50 % dát.' },
+  { topic:'measures', q:'Vzorec pre koeficient variácie CV je:', opts:['CV = σ² / x̄','CV = (σ / x̄) × 100%','CV = σ × x̄','CV = x̄ / σ'], a:1, exp:'CV = (σ / x̄) × 100% — relatívna miera variability, používa sa pre porovnanie rozptýlenosti.' },
+  { topic:'measures', q:'Čo je modus?', opts:['Stredná hodnota usporiadaného súboru','Hodnota, ktorá sa vyskytuje najčastejšie','Priemer všetkých hodnôt','Súčet hodnôt delený počtom'], a:1, exp:'Modus (Mo) = hodnota s najväčšou početnosťou.' },
+  { topic:'measures', q:'Smerodajná odchýlka σ je:', opts:['Súčet štvorcov odchýlok','Odmocnina z rozptylu','Rozptyl delený počtom','Priemerná hodnota minus minimum'], a:1, exp:'σ = √σ² — smerodajná odchýlka je odmocnina rozptylu, vyjadrená v pôvodných jednotkách.' },
+  { topic:'measures', q:'Geometrický priemer sa používa najmä pre:', opts:['Nominálne dáta','Miery polohy s extrémami','Časové rady a indexy rastu','Ordinálne škály'], a:2, exp:'Geometrický priemer G = ⁿ√(x₁ · x₂ · ... · xₙ) je vhodný pre indexy rastu a časové rady.' },
+  { topic:'measures', q:'Čo popisuje kumulatívna početnosť Nᵢ?', opts:['Podiel skupiny na celku','Počet hodnôt menší alebo rovný i-tej hodnote','Súčet relatívnych početností','Rozsah intervalu'], a:1, exp:'Nᵢ = kumulatívna absolútna početnosť — súčet nᵢ od začiatku po i-tý interval.' },
+  // INTERVALS
+  { topic:'intervals', q:'Čo je interval spoľahlivosti?', opts:['Presná hodnota parametra základného súboru','Interval, v ktorom leží skutočný parameter populácie s danou pravdepodobnosťou','Rozpätie dát','Smerodajná odchýlka výberu'], a:1, exp:'Interval spoľahlivosti = interval, ktorý obsahuje skutočnú hodnotu parametra s pravdepodobnosťou (1−α).' },
+  { topic:'intervals', q:'Čo je hladina spoľahlivosti (1−α)?', opts:['Pravdepodobnosť odmietnutia správnej H₀','Pravdepodobnosť, že interval pokrýva skutočný parameter','Chyba 2. druhu','Kritická hodnota testu'], a:1, exp:'(1−α) = pravdepodobnosť, že konštruovaný interval obsahuje skutočnú hodnotu parametra.' },
+  { topic:'intervals', q:'Čím je väčší rozsah výberu n, tým interval spoľahlivosti:', opts:['Je širší','Je užší','Zostáva rovnaký','Záleží len na α'], a:1, exp:'Väčší n → menšia štandardná chyba → užší interval spoľahlivosti.' },
+  { topic:'intervals', q:'Čo je štandardná chyba priemeru?', opts:['σ × n','σ / √n','σ²/n','√(σ/n)'], a:1, exp:'Štandardná chyba priemeru = σ / √n — miera nepresnosti odhadu priemeru výberom.' },
+  // TESTS
+  { topic:'tests', q:'Čo je p-hodnota?', opts:['Pravdepodobnosť, že H₀ je pravdivá','Pravdepodobnosť, že dostaneme také alebo extrémnejšie výsledky ak je H₀ pravdivá','Kritická hodnota testu','Hladina štatistickej významnosti'], a:1, exp:'p-hodnota = pravdepodobnosť získania výsledku aspoň tak extrémneho ako pozorovaný, za predpokladu platnosti H₀.' },
+  { topic:'tests', q:'Kedy odmietame nulovú hypotézu H₀?', opts:['Keď p > α','Keď p < α','Keď testová štatistika = 0','Keď vzorka je veľká'], a:1, exp:'H₀ odmietame, keď p < α (hladina významnosti). Výsledok je štatisticky významný.' },
+  { topic:'tests', q:'Čo je chyba 1. druhu (α)?', opts:['Neodmietnutie nepravdivej H₀','Odmietnutie pravdivej H₀','Nepravdivý výsledok testu','Chyba v dátach'], a:1, exp:'Chyba 1. druhu = odmietnutie H₀ keď je v skutočnosti pravdivá (falošne pozitívny výsledok).' },
+  { topic:'tests', q:'Aký test použijeme pre porovnanie 2 nezávislých skupín (parametrický)?', opts:['Párový T-test','Dvojvzorkový T-test','ANOVA','Chi-kvadrát'], a:1, exp:'Pre 2 nezávislé skupiny = Dvojvzorkový T-test (neparametrická alternatíva: Mann-Whitney U-test).' },
+  { topic:'tests', q:'Čo testuje Chi-kvadrát test?', opts:['Normalitu dát','Vzťah medzi dvoma kategorickými premennými','Rovnosť dvoch priemerov','Homogenitu rozptylov'], a:1, exp:'Chi-kvadrát test = testuje závislosť/nezávislosť dvoch kategorických premenných (kontingenčná tabuľka).' },
+  { topic:'tests', q:'Aký test sa používa na overenie normality dát?', opts:['T-test','Shapiro-Wilk test','Mann-Whitney U-test','ANOVA'], a:1, exp:'Shapiro-Wilk test (alebo Jarque-Bera, Kolmogorov-Smirnov) testuje, či dáta pochádzajú z normálneho rozdelenia.' },
+  { topic:'tests', q:'Čo je Leveneov test?', opts:['Test normality','Test na porovnanie priemerov','Test homogenity rozptylov','Test na odľahlé hodnoty'], a:2, exp:'Leveneov test = testuje zhodnosť (homogenitu) rozptylov v skupinách. Je predpokladom pre T-test a ANOVA.' },
+  // ANOVA
+  { topic:'anova', q:'Čo testuje ANOVA?', opts:['Vzťah dvoch premenných','Rovnosť priemerov 3 a viac skupín','Normalitu dát','Koreláciu premenných'], a:1, exp:'ANOVA (analýza rozptylu) testuje, či sú priemery 3 a viac skupín rovnaké.' },
+  { topic:'anova', q:'Aký je neparametrický ekvivalent jednocestnej ANOVA?', opts:['Wilcoxonov test','Mann-Whitney U-test','Kruskal-Wallis test','Friedmanov test'], a:2, exp:'Kruskal-Wallis test = neparametrická alternatíva jednocestnej ANOVA pre porovnanie 3+ skupín.' },
+  { topic:'anova', q:'Čo znamená F-štatistika v ANOVA?', opts:['Pomer rozptylu medzi skupinami k rozptylu vnútri skupín','Rozdiel priemerov skupín','Kumulatívna početnosť','Pravdepodobnosť nulovej hypotézy'], a:0, exp:'F = MSB / MSW — pomer variability medzi skupinami ku variabilite vnútri skupín.' },
+  { topic:'anova', q:'Na čo slúžia post-hoc testy v ANOVA?', opts:['Na overenie normality','Na zistenie, ktoré dvojice skupín sa líšia','Na výpočet F-štatistiky','Na kontrolu rozptylov'], a:1, exp:'Post-hoc testy (napr. Tukey, Bonferroni) identifikujú, ktoré konkrétne skupiny sa navzájom líšia.' },
+  // REGRESSION & CORRELATION
+  { topic:'regcor', q:'Čo vyjadruje Pearsonov korelačný koeficient r?', opts:['Silu lineárnej závislosti kvantitatívnych premenných','Kauzalitu medzi premennými','Rozdiel priemerov','Normalitu dát'], a:0, exp:'Pearsonov r ∈ [−1, +1] meria silu a smer lineárnej závislosti medzi dvoma kvantitatívnymi premennými.' },
+  { topic:'regcor', q:'Čo je koeficient determinácie R²?', opts:['Smerodajná odchýlka reziduí','Podiel variability Y vysvetlený modelom','Sklon regresnej priamky','Intercept regresnej priamky'], a:1, exp:'R² ∈ [0,1] — podiel variability závislej premennej Y vysvetlený regresným modelom.' },
+  { topic:'regcor', q:'Čo je rezíduum v regresii?', opts:['Sklon priamky','Odchýlka skutočnej hodnoty od odhadnutej','Intercept priamky','Štandardná chyba modelu'], a:1, exp:'Rezíduum = yᵢ − ŷᵢ — náhodná odchýlka skutočného pozorovania od hodnoty predikovanej modelom.' },
+  { topic:'regcor', q:'Spearmanov korelačný koeficient rₛ sa používa pre:', opts:['Lineárnu závislosť kvantitatívnych premenných','Poradie (rankované dáta) — neparametrická alternatíva','Kauzálne vzťahy','Intervalové dáta'], a:1, exp:'Spearmanov rₛ je neparametrická verzia Pearsonovho r — pracuje s poradím hodnôt, nie samotnými hodnotami.' },
+  { topic:'regcor', q:'Čo je kovariancia?', opts:['Miera sily závislosti','Ukazuje, či 2 premenné sa menia spolu — určuje smer vzťahu','Miera normality dát','Podiel vysvetlenej variability'], a:1, exp:'Kovariancia určuje SMER vzťahu (kladná = rastú spolu, záporná = inverzný vzťah), ale nie jeho silu.' },
+  // TIME SERIES
+  { topic:'timeseries', q:'Čo je to sezónnosť v časovom rade?', opts:['Dlhodobý smer vývoja','Nepravidelné výkyvy','Opakujúce sa výkyvy do 1 roka','Dlhšie kolísania 4–11 rokov'], a:2, exp:'Sezónnosť (S) = pravidelne sa opakujúce výkyvy s periódou do 1 roka (napr. tržby pred Vianocami).' },
+  { topic:'timeseries', q:'Vzorec aditivného modelu časového radu:', opts:['Yₜ = Tₜ × Sₜ × Cₜ × Iₜ','Yₜ = Tₜ + Sₜ + Cₜ + Iₜ','Yₜ = Tₜ − Sₜ + Iₜ','Yₜ = (Tₜ + Sₜ) / Iₜ'], a:1, exp:'Aditivný model: Yₜ = Tₜ + Sₜ + Cₜ + Iₜ — zložky sa sčítajú.' },
+  { topic:'timeseries', q:'Čo vyjadruje koeficient rastu kₜ?', opts:['O koľko sa zmenila hodnota','Koľkokrát vzrástla hodnota (yₜ / y₍ₜ₋₁₎)','Percentuálny rast hodnoty','Rozdiel medzi hodnotami'], a:1, exp:'Koeficient rastu kₜ = yₜ / y₍ₜ₋₁₎ — vyjadruje, koľkokrát vzrástla hodnota oproti predchádzajúcemu obdobiu.' },
+  { topic:'timeseries', q:'Čo je trend v časovom rade?', opts:['Opakujúce sa sezónne výkyvy','Dlhodobý smer vývoja (rast/pokles)','Náhodné okamžité výkyvy','Cyklické kolísania 4–11 rokov'], a:1, exp:'Trend (T) = dlhodobý smer vývoja časového radu — systematický rast alebo pokles.' },
+  // PROBABILITY
+  { topic:'prob', q:'Základný vzorec pravdepodobnosti P(A) je:', opts:['P(A) = n/m','P(A) = m/n','P(A) = m × n','P(A) = 1/m'], a:1, exp:'P(A) = m/n, kde m = počet priaznivých výsledkov, n = počet všetkých možných výsledkov.' },
+  { topic:'prob', q:'Pre nezávislé javy A a B platí:', opts:['P(A∩B) = P(A) + P(B)','P(A∩B) = P(A) · P(B|A)','P(A∩B) = P(A) · P(B)','P(A∩B) = P(A) − P(B)'], a:2, exp:'Pre nezávislé javy: P(A∩B) = P(A) · P(B) — nezávislosť znamená, že výsledok A neovplyvňuje B.' },
+  { topic:'prob', q:'Normálne rozdelenie je:', opts:['Asymetrické s ťažkým chvostom vpravo','Symetrické zvonovité rozdelenie určené μ a σ²','Rozdelenie iba pre diskrétne premenné','Rovnomerné rozdelenie hodnôt'], a:1, exp:'Normálne rozdelenie má symetrický zvonovitý tvar, je určené strednou hodnotou μ a rozptylom σ².' },
+  { topic:'prob', q:'Pre navzájom sa vylučujúce javy A a B platí:', opts:['P(A∪B) = P(A) + P(B) − P(A∩B)','P(A∪B) = P(A) · P(B)','P(A∪B) = P(A) + P(B)','P(A∪B) = P(A) − P(B)'], a:2, exp:'Vylučujúce javy nemôžu nastať súčasne, teda P(A∩B) = 0, preto P(A∪B) = P(A) + P(B).' },
+];
+
+const TF_QUESTIONS = [
+  { topic:'basics', q:'Histogram zobrazuje spojnicový graf spájajúci stredy intervalov.', a:false, exp:'Histogram je stĺpcový diagram. Polygón spája stredy intervalov — to sú dva rôzne grafy.' },
+  { topic:'basics', q:'Relatívna početnosť fᵢ sa vypočíta ako nᵢ / n.', a:true, exp:'Správne: fᵢ = nᵢ / n — podiel výskytov danej hodnoty na celkovom počte pozorovaní.' },
+  { topic:'basics', q:'Kvantitatívne premenné sa vyjadrujú slovom (napr. farba, pohlavie).', a:false, exp:'Kvalitatívne premenné sa vyjadrujú slovom. Kvantitatívne sa vyjadrujú číselne.' },
+  { topic:'measures', q:'Medián je odolný voči odľahlým hodnotám na rozdiel od aritmetického priemeru.', a:true, exp:'Správne. Medián závisí len od poradia, nie od veľkosti hodnôt — extrémne hodnoty ho neovplyvnia.' },
+  { topic:'measures', q:'Rozptyl σ² je odmocnina zo smerodajnej odchýlky.', a:false, exp:'Naopak: smerodajná odchýlka σ = √σ². Rozptyl je druhá mocnina smerodajnej odchýlky.' },
+  { topic:'measures', q:'Koeficient variácie CV sa používa na porovnanie variability súborov s rôznymi priemermi.', a:true, exp:'Správne. CV = (σ/x̄)×100% je relatívna miera — umožňuje porovnanie rôznych súborov.' },
+  { topic:'tests', q:'P-hodnota menšia ako 0.05 znamená, že výsledok je štatisticky nevýznamný.', a:false, exp:'Opak: p < 0.05 znamená štatisticky VÝZNAMNÝ výsledok — odmietame H₀.' },
+  { topic:'tests', q:'Chyba 2. druhu (β) nastáva, keď neodmietame H₀, hoci je nepravdivá.', a:true, exp:'Správne. Chyba 2. druhu = prijatie nepravdivej H₀ (falošne negatívny výsledok).' },
+  { topic:'tests', q:'Shapiro-Wilk test testuje rovnosť priemerov dvoch skupín.', a:false, exp:'Shapiro-Wilk testuje NORMALITU dát. Na porovnanie priemerov sa používa T-test.' },
+  { topic:'anova', q:'ANOVA môže byť použitá na porovnanie priemerov 2 skupín.', a:false, exp:'ANOVA sa používa pre 3 a viac skupín. Pre 2 skupiny sa používa T-test.' },
+  { topic:'anova', q:'F-štatistika v ANOVA je pomer variability medzi skupinami k variabilite vnútri skupín.', a:true, exp:'Správne. F = MSB/MSW. Veľký F znamená, že rozdiely medzi skupinami sú väčšie ako náhodná variabilita.' },
+  { topic:'regcor', q:'Pearsonov korelačný koeficient r = 0.9 znamená silnú kladnú závislosť.', a:true, exp:'Správne. |r| ∈ (0.7, 0.9) = silná závislosť. r = 0.9 je veľmi silná kladná závislosť.' },
+  { topic:'regcor', q:'Kovariancia meria silu závisnosti medzi premennými.', a:false, exp:'Kovariancia určuje iba SMER vzťahu. Silu závislosti meria korelačný koeficient.' },
+  { topic:'timeseries', q:'Multiplikatívny model časového radu vyjadruje: Yₜ = Tₜ × Sₜ × Cₜ × Iₜ', a:true, exp:'Správne. Multiplikatívny model násobí zložky, aditivný ich sčítava.' },
+  { topic:'prob', q:'Pravdepodobnosť javu A je vždy v rozsahu [0, 1].', a:true, exp:'Správne. P(A) ∈ [0,1]. Nemožný jav má P = 0, istý jav má P = 1.' },
+  { topic:'prob', q:'Pre závislé javy A a B platí P(A∩B) = P(A) · P(B).', a:false, exp:'Tento vzorec platí len pre NEZÁVISLÉ javy. Pre závislé: P(A∩B) = P(A) · P(B|A).' },
+  { topic:'intervals', q:'Čím väčší je výber n, tým širší je interval spoľahlivosti.', a:false, exp:'Opak: väčší n → menšia štandardná chyba → UŽŠÍ interval spoľahlivosti.' },
+  { topic:'intervals', q:'95% interval spoľahlivosti znamená, že 95% takýchto intervalov pokryje skutočný parameter.', a:true, exp:'Správne. Ak skonštruujeme veľa intervalov rovnakou metódou, 95% z nich bude obsahovať skutočný parameter.' },
+];
+
+const MATCH_SETS = [
+  {
+    title: 'Miery polohy',
+    pairs: [
+      { term:'Aritmetický priemer', def:'Σxᵢ / n — citlivý na extrémne hodnoty' },
+      { term:'Medián', def:'Stredná hodnota usporiadaného radu' },
+      { term:'Modus', def:'Hodnota s najväčšou početnosťou' },
+      { term:'Geometrický priemer', def:'ⁿ√(x₁ · x₂ · ... · xₙ) — pre rast' },
+      { term:'IQR', def:'Q3 − Q1 — medzikvartilové rozpätie' },
+    ]
+  },
+  {
+    title: 'Štatistické testy',
+    pairs: [
+      { term:'Shapiro-Wilk', def:'Test normality dát' },
+      { term:'Pearsonov r', def:'Lineárna závislosť kvantitatívnych premenných' },
+      { term:'Kruskal-Wallis', def:'Neparametrická alternatíva ANOVA (3+ skupín)' },
+      { term:'Chi-kvadrát', def:'Test závislosti kategorických premenných' },
+      { term:'Leveneov test', def:'Test homogenity rozptylov' },
+    ]
+  },
+  {
+    title: 'Časové rady — zložky',
+    pairs: [
+      { term:'Trend (T)', def:'Dlhodobý smer vývoja' },
+      { term:'Sezónnosť (S)', def:'Opakujúce sa výkyvy do 1 roka' },
+      { term:'Cyklus (C)', def:'Dlhšie kolísania 4–11 rokov' },
+      { term:'Náhoda (I)', def:'Nepravidelné okamžité výkyvy' },
+      { term:'Aditivný model', def:'Yₜ = Tₜ + Sₜ + Cₜ + Iₜ' },
+    ]
+  },
+  {
+    title: 'Pravdepodobnosť & vzorce',
+    pairs: [
+      { term:'P(A) = m/n', def:'Klasická definícia pravdepodobnosti' },
+      { term:'P(A∩B) = P(A)·P(B)', def:'Nezávislé javy — súčin pravdepodobností' },
+      { term:'P(A∪B) = P(A)+P(B)', def:'Vylučujúce javy — súčet pravdepodobností' },
+      { term:'P(A∩B) = P(A)·P(B|A)', def:'Závislé javy — podmienená pravdepodobnosť' },
+      { term:'R²', def:'Koeficient determinácie — vysvetlená variabilita' },
+    ]
+  },
+];
+
+const FILL_QUESTIONS = [
+  { q:'Vzorec pre rozptyl σ²:', cat:'Miery variability', a:'σ² = Σ(xᵢ − x̄)² / n', hints:['Stredná hodnota štvorcov odchýlok'], alts:['sigma2','rozptyl','dispersion'] },
+  { q:'Vzorec pre smerodajnú odchýlku σ:', cat:'Miery variability', a:'σ = √σ²', hints:['Odmocnina z rozptylu'], alts:['odmocnina rozptylu'] },
+  { q:'Vzorec pre koeficient variácie CV:', cat:'Relatívna variabilita', a:'CV = (σ / x̄) · 100 %', hints:['Podiel smerodajnej odchýlky a priemeru'], alts:['cv=(sigma/x)*100'] },
+  { q:'Vzorec pre aditivný model časového radu:', cat:'Časové rady', a:'Yₜ = Tₜ + Sₜ + Cₜ + Iₜ', hints:['Sčítava 4 zložky: Trend, Sezónnosť, Cyklus, Náhoda'], alts:['yt=tt+st+ct+it'] },
+  { q:'Vzorec pre relatívnu početnosť fᵢ:', cat:'Frekvenčná tabuľka', a:'fᵢ = nᵢ / n', hints:['Podiel absolútnej početnosti na celku'], alts:['fi=ni/n'] },
+  { q:'Vzorec pre IQR (medzikvartilové rozpätie):', cat:'Kvantily', a:'IQR = Q3 − Q1', hints:['Rozdiel horného a dolného kvartilov'], alts:['q3-q1','iqr=q3-q1'] },
+  { q:'Vzorec pre pravdepodobnosť P(A) pri rovnako pravdepodobných výsledkoch:', cat:'Pravdepodobnosť', a:'P(A) = m / n', hints:['m = priaznivé, n = všetky výsledky'], alts:['p=m/n','m/n'] },
+  { q:'Vzorec pre koeficient rastu kₜ v časovom rade:', cat:'Ukazovatele dynamiky', a:'kₜ = yₜ / y₍ₜ₋₁₎', hints:['Pomer aktuálnej a predchádzajúcej hodnoty'], alts:['kt=yt/yt-1','yт/yт-1'] },
+  { q:'Vzorec pre aritmetický priemer x̄:', cat:'Miery polohy', a:'x̄ = (Σxᵢ) / n', hints:['Súčet všetkých hodnôt delený počtom'], alts:['suma/n','xbar=sum/n'] },
+  { q:'Vzorec pre harmonický priemer H:', cat:'Miery polohy', a:'H = n / Σ(1/xᵢ)', hints:['Podiel počtu pozorovaní a súčtu prevrátených hodnôt'], alts:['h=n/sum(1/xi)'] },
+  { q:'Vzorec pre štandardnú chybu priemeru:', cat:'Intervaly spoľahlivosti', a:'SE = σ / √n', hints:['Smerodajná odchýlka delená odmocninou rozsahu'], alts:['se=sigma/sqrt(n)','σ/√n'] },
+  { q:'Vzorec pre absolútny prírastok v časovom rade:', cat:'Ukazovatele dynamiky', a:'Δyₜ = yₜ − y₍ₜ₋₁₎', hints:['Rozdiel aktuálnej a predchádzajúcej hodnoty'], alts:['delta=yt-yt-1','yт-yт-1'] },
+];
+
+// ═══════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resultHTML(correct, total, wrong, mode, retryFn) {
+  const pct = Math.round((correct / total) * 100);
+  let msg = pct >= 90 ? '🏆 Výborný výsledok! Máš to zvládnuté.' :
+            pct >= 70 ? '👍 Dobrá práca! Ešte trošku precvičiť.' :
+            pct >= 50 ? '📚 Zopakuj si látku a skús znova.' :
+                        '💪 Nevzdávaj sa! Štúdium ťa posilní.';
+  let wrongHTML = '';
+  if (wrong && wrong.length > 0) {
+    wrongHTML = `<div class="wrong-list"><h4>❌ NESPRÁVNE ODPOVEDE</h4>` +
+      wrong.map(w => `<div class="wrong-item"><div class="wi-q">${w.q}</div>
+        <div class="wi-y">Tvoja: ${w.your}</div>
+        <div class="wi-a">Správne: ${w.correct}</div></div>`).join('') +
+      `</div>`;
+  }
+  return `<div class="results-screen">
+    <div class="results-score">${pct}%</div>
+    <div class="results-label">${correct} / ${total} správnych odpovedí</div>
+    <div class="results-stats">
+      <div class="r-stat"><div class="rv green">${correct}</div><div class="rn">Správne</div></div>
+      <div class="r-stat"><div class="rv red">${total - correct}</div><div class="rn">Chybné</div></div>
+      <div class="r-stat"><div class="rv blue">${total}</div><div class="rn">Celkom</div></div>
+    </div>
+    <div class="results-message">${msg}</div>
+    <div class="results-actions">
+      <button class="btn-retry" onclick="${retryFn}">🔄 ZOPAKOVAŤ</button>
+      <button class="btn-home" onclick="showSection('home', document.querySelectorAll('.nav button')[0])">← DOMOV</button>
+    </div>
+    ${wrongHTML}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  MC — MULTIPLE CHOICE
+// ═══════════════════════════════════════════════════
+
+let mcState = {};
+
+function initMCTopics() {
+  const container = document.getElementById('mc-topics');
+  container.innerHTML = TOPICS.map((t, i) =>
+    `<button class="topic-btn ${t.id==='all'?'selected':''}" data-id="${t.id}" onclick="toggleMCTopic('${t.id}',this)">
+      <div class="tnum">${String(i+1).padStart(2,'0')}</div>
+      <div class="tname">${t.label}</div>
+    </button>`
+  ).join('');
+}
+
+function toggleMCTopic(id, btn) {
+  if (id === 'all') {
+    document.querySelectorAll('#mc-topics .topic-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  } else {
+    const allBtn = document.querySelector('#mc-topics [data-id="all"]');
+    allBtn.classList.remove('selected');
+    btn.classList.toggle('selected');
+    const anySelected = document.querySelectorAll('#mc-topics .topic-btn.selected').length > 0;
+    if (!anySelected) allBtn.classList.add('selected');
+  }
+}
+
+function startMC() {
+  const selected = [...document.querySelectorAll('#mc-topics .topic-btn.selected')].map(b => b.dataset.id);
+  let pool = selected.includes('all') ? MC_QUESTIONS :
+    MC_QUESTIONS.filter(q => selected.includes(q.topic));
+  if (pool.length === 0) { alert('Vyber aspoň jednu tému!'); return; }
+  pool = shuffle(pool).slice(0, Math.min(15, pool.length));
+  pool = pool.map(q => ({ ...q, opts: shuffle(q.opts.map((o,i) => ({text:o, origIdx:i}))), }));
+
+  mcState = { pool, idx: 0, correct: 0, wrong: [], answered: false };
+  document.getElementById('mc-topic-screen').style.display = 'none';
+  document.getElementById('mc-quiz-screen').style.display = 'block';
+  document.getElementById('mc-results').style.display = 'none';
+  document.getElementById('mc-qtotal').textContent = pool.length;
+  renderMCQuestion();
+}
+
+function renderMCQuestion() {
+  const { pool, idx } = mcState;
+  const q = pool[idx];
+  mcState.answered = false;
+
+  document.getElementById('mc-qnum').textContent = idx + 1;
+  document.getElementById('mc-qnum-label').textContent = `OTÁZKA ${String(idx+1).padStart(2,'0')}`;
+  document.getElementById('mc-correct-count').textContent = mcState.correct;
+  document.getElementById('mc-progress').style.width = `${(idx / pool.length) * 100}%`;
+  document.getElementById('mc-question').textContent = q.q;
+  document.getElementById('mc-sub').style.display = 'none';
+
+  const letters = ['A','B','C','D'];
+  document.getElementById('mc-options').innerHTML = q.opts.map((opt, i) =>
+    `<button class="opt-btn" onclick="answerMC(${opt.origIdx}, this)">
+      <span class="opt-letter">${letters[i]}</span>
+      <span>${opt.text}</span>
+    </button>`
+  ).join('');
+
+  const fb = document.getElementById('mc-feedback');
+  fb.className = 'feedback';
+  fb.innerHTML = '';
+  document.getElementById('mc-next').className = 'next-btn';
+}
+
+function answerMC(chosen, btn) {
+  if (mcState.answered) return;
+  mcState.answered = true;
+  const q = mcState.pool[mcState.idx];
+
+  document.querySelectorAll('#mc-options .opt-btn').forEach(b => b.disabled = true);
+
+  const allBtns = document.querySelectorAll('#mc-options .opt-btn');
+  allBtns.forEach((b, i) => {
+    if (mcState.pool[mcState.idx].opts[i].origIdx === q.a) b.classList.add('correct');
+  });
+
+  const fb = document.getElementById('mc-feedback');
+  if (chosen === q.a) {
+    mcState.correct++;
+    btn.classList.add('correct');
+    fb.className = 'feedback ok show';
+    fb.innerHTML = `<span>✅</span><div><strong>Správne!</strong> ${q.exp}</div>`;
+  } else {
+    btn.classList.add('wrong');
+    fb.className = 'feedback err show';
+    fb.innerHTML = `<span>❌</span><div><strong>Chyba.</strong> ${q.exp}</div>`;
+    mcState.wrong.push({ q: q.q, your: q.opts.find(o => o.origIdx === chosen)?.text || '—', correct: q.opts.find(o => o.origIdx === q.a)?.text || '—' });
+  }
+  document.getElementById('mc-correct-count').textContent = mcState.correct;
+  document.getElementById('mc-next').className = 'next-btn show';
+}
+
+function mcNext() {
+  mcState.idx++;
+  if (mcState.idx >= mcState.pool.length) {
+    document.getElementById('mc-quiz-screen').style.display = 'none';
+    const res = document.getElementById('mc-results');
+    res.style.display = 'block';
+    res.innerHTML = resultHTML(mcState.correct, mcState.pool.length, mcState.wrong, 'mc', 'startMC()');
+  } else {
+    renderMCQuestion();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  TF — TRUE / FALSE
+// ═══════════════════════════════════════════════════
+
+let tfState = {};
+
+function startTF() {
+  const pool = shuffle(TF_QUESTIONS).slice(0, 15);
+  tfState = { pool, idx: 0, correct: 0, wrong: [], answered: false };
+  document.getElementById('tf-start-screen').style.display = 'none';
+  document.getElementById('tf-quiz-screen').style.display = 'block';
+  document.getElementById('tf-results').style.display = 'none';
+  document.getElementById('tf-qtotal').textContent = pool.length;
+  renderTFQuestion();
+}
+
+function renderTFQuestion() {
+  const { pool, idx } = tfState;
+  const q = pool[idx];
+  tfState.answered = false;
+
+  document.getElementById('tf-qnum').textContent = idx + 1;
+  document.getElementById('tf-qnum-label').textContent = `TVRDENIE ${String(idx+1).padStart(2,'0')}`;
+  document.getElementById('tf-correct-count').textContent = tfState.correct;
+  document.getElementById('tf-progress').style.width = `${(idx / pool.length) * 100}%`;
+  document.getElementById('tf-question').textContent = q.q;
+
+  document.getElementById('tf-true').className = 'tf-btn t-btn';
+  document.getElementById('tf-false').className = 'tf-btn f-btn';
+  document.getElementById('tf-true').disabled = false;
+  document.getElementById('tf-false').disabled = false;
+
+  const fb = document.getElementById('tf-feedback');
+  fb.className = 'feedback';
+  fb.innerHTML = '';
+  document.getElementById('tf-next').className = 'next-btn';
+}
+
+function answerTF(chosen) {
+  if (tfState.answered) return;
+  tfState.answered = true;
+  const q = tfState.pool[tfState.idx];
+
+  document.getElementById('tf-true').disabled = true;
+  document.getElementById('tf-false').disabled = true;
+
+  const trueBtn = document.getElementById('tf-true');
+  const falseBtn = document.getElementById('tf-false');
+  if (q.a) trueBtn.classList.add('correct'); else falseBtn.classList.add('correct');
+
+  const fb = document.getElementById('tf-feedback');
+  if (chosen === q.a) {
+    tfState.correct++;
+    (chosen ? trueBtn : falseBtn).classList.add('correct');
+    fb.className = 'feedback ok show';
+    fb.innerHTML = `<span>✅</span><div><strong>Správne!</strong> ${q.exp}</div>`;
+  } else {
+    (chosen ? trueBtn : falseBtn).classList.add('wrong');
+    fb.className = 'feedback err show';
+    fb.innerHTML = `<span>❌</span><div><strong>Chyba.</strong> ${q.exp}</div>`;
+    tfState.wrong.push({ q: q.q, your: chosen ? 'PRAVDA' : 'LOŽ', correct: q.a ? 'PRAVDA' : 'LOŽ' });
+  }
+  document.getElementById('tf-correct-count').textContent = tfState.correct;
+  document.getElementById('tf-next').className = 'next-btn show';
+}
+
+function tfNext() {
+  tfState.idx++;
+  if (tfState.idx >= tfState.pool.length) {
+    document.getElementById('tf-quiz-screen').style.display = 'none';
+    const res = document.getElementById('tf-results');
+    res.style.display = 'block';
+    res.innerHTML = resultHTML(tfState.correct, tfState.pool.length, tfState.wrong, 'tf', 'startTF()');
+  } else {
+    renderTFQuestion();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  MATCHING
+// ═══════════════════════════════════════════════════
+
+let matchState = {};
+
+function startMatch() {
+  matchState = { round: 0, totalScore: 0, selectedLeft: null, selectedRight: null, matchedPairs: 0 };
+  document.getElementById('match-start-screen').style.display = 'none';
+  document.getElementById('match-quiz-screen').style.display = 'block';
+  document.getElementById('match-results').style.display = 'none';
+  renderMatchRound();
+}
+
+function renderMatchRound() {
+  const set = MATCH_SETS[matchState.round];
+  matchState.matchedPairs = 0;
+  matchState.selectedLeft = null;
+  matchState.selectedRight = null;
+  matchState.pairs = shuffle(set.pairs);
+  matchState.rightShuffled = shuffle([...matchState.pairs]);
+
+  document.getElementById('match-round').textContent = matchState.round + 1;
+  document.getElementById('match-progress').style.width = `${(matchState.round / MATCH_SETS.length) * 100}%`;
+
+  const leftHTML = matchState.pairs.map((p, i) =>
+    `<div class="match-item" data-idx="${i}" data-side="left" onclick="matchClick('left',${i},this)">${p.term}</div>`
+  ).join('');
+  const rightHTML = matchState.rightShuffled.map((p, i) =>
+    `<div class="match-item" data-idx="${i}" data-side="right" onclick="matchClick('right',${i},this)">${p.def}</div>`
+  ).join('');
+
+  document.getElementById('match-left').innerHTML = leftHTML;
+  document.getElementById('match-right').innerHTML = rightHTML;
+  document.getElementById('match-next').style.display = 'none';
+}
+
+function matchClick(side, idx, el) {
+  if (el.classList.contains('matched-ok') || el.classList.contains('disabled')) return;
+
+  if (side === 'left') {
+    document.querySelectorAll('#match-left .match-item').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    matchState.selectedLeft = idx;
+  } else {
+    document.querySelectorAll('#match-right .match-item').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    matchState.selectedRight = idx;
+  }
+
+  if (matchState.selectedLeft !== null && matchState.selectedRight !== null) {
+    const leftPair = matchState.pairs[matchState.selectedLeft];
+    const rightPair = matchState.rightShuffled[matchState.selectedRight];
+
+    const leftEl = document.querySelector(`#match-left [data-idx="${matchState.selectedLeft}"]`);
+    const rightEl = document.querySelector(`#match-right [data-idx="${matchState.selectedRight}"]`);
+
+    if (leftPair.def === rightPair.def) {
+      leftEl.classList.remove('selected');
+      rightEl.classList.remove('selected');
+      leftEl.classList.add('matched-ok');
+      rightEl.classList.add('matched-ok');
+      matchState.matchedPairs++;
+      matchState.totalScore++;
+      document.getElementById('match-score').textContent = matchState.totalScore;
+
+      if (matchState.matchedPairs === matchState.pairs.length) {
+        setTimeout(() => {
+          matchState.round++;
+          if (matchState.round >= MATCH_SETS.length) {
+            document.getElementById('match-quiz-screen').style.display = 'none';
+            const res = document.getElementById('match-results');
+            res.style.display = 'block';
+            const total = MATCH_SETS.reduce((a, s) => a + s.pairs.length, 0);
+            res.innerHTML = resultHTML(matchState.totalScore, total, [], 'match', 'startMatch()');
+          } else {
+            document.getElementById('match-next').style.display = 'inline-block';
+          }
+        }, 600);
+      }
+    } else {
+      leftEl.classList.add('matched-err');
+      rightEl.classList.add('matched-err');
+      setTimeout(() => {
+        leftEl.classList.remove('matched-err', 'selected');
+        rightEl.classList.remove('matched-err', 'selected');
+      }, 700);
+    }
+
+    matchState.selectedLeft = null;
+    matchState.selectedRight = null;
+  }
+}
+
+function matchNext() {
+  renderMatchRound();
+}
+
+// ═══════════════════════════════════════════════════
+//  FILL IN THE BLANK
+// ═══════════════════════════════════════════════════
+
+let fillState = {};
+
+function startFill() {
+  const pool = shuffle(FILL_QUESTIONS).slice(0, 12);
+  fillState = { pool, idx: 0, correct: 0, wrong: [], answered: false };
+  document.getElementById('fill-start-screen').style.display = 'none';
+  document.getElementById('fill-quiz-screen').style.display = 'block';
+  document.getElementById('fill-results').style.display = 'none';
+  document.getElementById('fill-qtotal').textContent = pool.length;
+  renderFillQuestion();
+}
+
+function renderFillQuestion() {
+  const { pool, idx } = fillState;
+  const q = pool[idx];
+  fillState.answered = false;
+
+  document.getElementById('fill-qnum').textContent = idx + 1;
+  document.getElementById('fill-qnum-label').textContent = `OTÁZKA ${String(idx+1).padStart(2,'0')}`;
+  document.getElementById('fill-correct-count').textContent = fillState.correct;
+  document.getElementById('fill-progress').style.width = `${(idx / pool.length) * 100}%`;
+  document.getElementById('fill-question').textContent = q.q;
+  document.getElementById('fill-category').textContent = q.cat;
+  document.getElementById('fill-category').style.display = 'block';
+
+  const inp = document.getElementById('fill-input');
+  inp.value = '';
+  inp.className = 'fill-input';
+  inp.disabled = false;
+
+  const hint = document.getElementById('fill-hint');
+  hint.style.display = 'none';
+  hint.textContent = '';
+
+  const fb = document.getElementById('fill-feedback');
+  fb.className = 'feedback';
+  fb.innerHTML = '';
+
+  document.getElementById('fill-submit-btn').disabled = false;
+  document.getElementById('fill-next').className = 'next-btn';
+  setTimeout(() => inp.focus(), 100);
+}
+
+function showHint() {
+  const q = fillState.pool[fillState.idx];
+  const hint = document.getElementById('fill-hint');
+  hint.style.display = 'block';
+  hint.textContent = '💡 Nápoveda: ' + q.hints[0];
+}
+
+function normalizeAns(s) {
+  return s.toLowerCase().replace(/\s+/g, '').replace(/[·×·*]/g, '').replace(/[²]/g, '2').replace(/[σ]/g,'sigma').replace(/[μ]/g,'mu');
+}
+
+function submitFill() {
+  if (fillState.answered) return;
+  const q = fillState.pool[fillState.idx];
+  const inp = document.getElementById('fill-input');
+  const val = inp.value.trim();
+  if (!val) return;
+
+  fillState.answered = true;
+  inp.disabled = true;
+  document.getElementById('fill-submit-btn').disabled = true;
+
+  const normVal = normalizeAns(val);
+  const normAns = normalizeAns(q.a);
+  const altsNorm = (q.alts || []).map(a => normalizeAns(a));
+  const isCorrect = normVal === normAns || altsNorm.includes(normVal) || normAns.includes(normVal) && normVal.length > 3;
+
+  const fb = document.getElementById('fill-feedback');
+  if (isCorrect) {
+    fillState.correct++;
+    inp.className = 'fill-input correct';
+    fb.className = 'feedback ok show';
+    fb.innerHTML = `<span>✅</span><div><strong>Správne!</strong> Vzorec: <span style="font-family:'Space Mono',monospace;color:var(--accent3)">${q.a}</span></div>`;
+  } else {
+    inp.className = 'fill-input wrong';
+    fb.className = 'feedback err show';
+    fb.innerHTML = `<span>❌</span><div><strong>Správna odpoveď:</strong> <span style="font-family:'Space Mono',monospace;color:var(--accent3)">${q.a}</span></div>`;
+    fillState.wrong.push({ q: q.q, your: val, correct: q.a });
+  }
+  document.getElementById('fill-correct-count').textContent = fillState.correct;
+  document.getElementById('fill-next').className = 'next-btn show';
+}
+
+function fillNext() {
+  fillState.idx++;
+  if (fillState.idx >= fillState.pool.length) {
+    document.getElementById('fill-quiz-screen').style.display = 'none';
+    const res = document.getElementById('fill-results');
+    res.style.display = 'block';
+    res.innerHTML = resultHTML(fillState.correct, fillState.pool.length, fillState.wrong, 'fill', 'startFill()');
+  } else {
+    renderFillQuestion();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  SPEED QUIZ
+// ═══════════════════════════════════════════════════
+
+let speedState = {};
+let speedTimer = null;
+
+function startSpeed() {
+  const pool = shuffle(MC_QUESTIONS).slice(0, 20).map(q => ({
+    ...q,
+    opts: shuffle(q.opts.map((o, i) => ({text:o, origIdx:i})))
+  }));
+  speedState = { pool, idx: 0, score: 0, streak: 0, timeLeft: 15, wrong: [], answered: false };
+  document.getElementById('speed-start-screen').style.display = 'none';
+  document.getElementById('speed-quiz-screen').style.display = 'block';
+  document.getElementById('speed-results').style.display = 'none';
+  renderSpeedQuestion();
+}
+
+function renderSpeedQuestion() {
+  const { pool, idx } = speedState;
+  if (idx >= pool.length) { endSpeed(); return; }
+  const q = pool[idx];
+  speedState.answered = false;
+  speedState.timeLeft = 15;
+
+  document.getElementById('speed-qnum-label').textContent = `OTÁZKA ${String(idx+1).padStart(2,'0')} / ${pool.length}`;
+  document.getElementById('speed-progress').style.width = `${(idx / pool.length) * 100}%`;
+  document.getElementById('speed-question').textContent = q.q;
+  document.getElementById('speed-streak').textContent = speedState.streak;
+
+  const letters = ['A','B','C','D'];
+  document.getElementById('speed-options').innerHTML = q.opts.map((opt, i) =>
+    `<button class="speed-opt" onclick="answerSpeed(${opt.origIdx},this)">${letters[i]}) ${opt.text}</button>`
+  ).join('');
+
+  document.getElementById('speed-feedback').className = 'feedback';
+  document.getElementById('speed-feedback').innerHTML = '';
+
+  if (speedTimer) clearInterval(speedTimer);
+  updateTimerRing(15, 15);
+  speedTimer = setInterval(() => {
+    speedState.timeLeft--;
+    updateTimerRing(speedState.timeLeft, 15);
+    if (speedState.timeLeft <= 0) {
+      clearInterval(speedTimer);
+      if (!speedState.answered) {
+        speedState.answered = true;
+        speedState.streak = 0;
+        document.getElementById('speed-streak').textContent = 0;
+        document.querySelectorAll('.speed-opt').forEach(b => b.disabled = true);
+        const q2 = speedState.pool[speedState.idx];
+        document.querySelectorAll('.speed-opt').forEach((b, i) => {
+          if (speedState.pool[speedState.idx].opts[i].origIdx === q2.a) b.classList.add('correct');
+        });
+        const fb = document.getElementById('speed-feedback');
+        fb.className = 'feedback err show';
+        fb.innerHTML = `<span>⏰</span><div><strong>Čas vypršal!</strong> Správne: ${q2.opts.find(o=>o.origIdx===q2.a)?.text}</div>`;
+        speedState.wrong.push({ q: q2.q, your: 'Čas vypršal', correct: q2.opts.find(o=>o.origIdx===q2.a)?.text || '—' });
+        setTimeout(() => { speedState.idx++; renderSpeedQuestion(); }, 2000);
+      }
+    }
+  }, 1000);
+}
+
+function updateTimerRing(left, total) {
+  const circ = 2 * Math.PI * 26;
+  const offset = circ * (1 - left / total);
+  const ring = document.getElementById('speed-ring');
+  ring.style.strokeDashoffset = offset;
+  ring.style.stroke = left <= 5 ? '#f87171' : left <= 10 ? '#fbbf24' : 'var(--accent4)';
+  document.getElementById('speed-timer').textContent = left;
+  document.getElementById('speed-timer').style.color = left <= 5 ? '#f87171' : left <= 10 ? '#fbbf24' : 'var(--accent4)';
+}
+
+function answerSpeed(chosen, btn) {
+  if (speedState.answered) return;
+  speedState.answered = true;
+  clearInterval(speedTimer);
+
+  const q = speedState.pool[speedState.idx];
+  document.querySelectorAll('.speed-opt').forEach(b => b.disabled = true);
+  document.querySelectorAll('.speed-opt').forEach((b, i) => {
+    if (q.opts[i].origIdx === q.a) b.classList.add('correct');
+  });
+
+  const fb = document.getElementById('speed-feedback');
+  if (chosen === q.a) {
+    btn.classList.add('correct');
+    const timeBonus = Math.max(0, Math.floor(speedState.timeLeft * 10));
+    const streakBonus = speedState.streak >= 3 ? 50 : speedState.streak >= 2 ? 20 : 0;
+    const points = 100 + timeBonus + streakBonus;
+    speedState.score += points;
+    speedState.streak++;
+    document.getElementById('speed-score-display').textContent = speedState.score;
+    document.getElementById('speed-streak').textContent = speedState.streak;
+    fb.className = 'feedback ok show';
+    fb.innerHTML = `<span>✅</span><div><strong>+${points} bodov!</strong> ${speedState.streak >= 2 ? '🔥 Streak ×' + speedState.streak + '!' : ''}  Zostatok: ${speedState.timeLeft}s</div>`;
+  } else {
+    btn.classList.add('wrong');
+    speedState.streak = 0;
+    document.getElementById('speed-streak').textContent = 0;
+    fb.className = 'feedback err show';
+    fb.innerHTML = `<span>❌</span><div><strong>Chyba.</strong> ${q.exp}</div>`;
+    speedState.wrong.push({ q: q.q, your: q.opts.find(o=>o.origIdx===chosen)?.text||'—', correct: q.opts.find(o=>o.origIdx===q.a)?.text||'—' });
+  }
+
+  setTimeout(() => { speedState.idx++; renderSpeedQuestion(); }, 1800);
+}
+
+function endSpeed() {
+  clearInterval(speedTimer);
+  document.getElementById('speed-quiz-screen').style.display = 'none';
+  const res = document.getElementById('speed-results');
+  res.style.display = 'block';
+  const correct = speedState.pool.length - speedState.wrong.length;
+  res.innerHTML = `<div class="results-screen">
+    <div class="results-score">${speedState.score}</div>
+    <div class="results-label">bodov celkom · ${correct}/${speedState.pool.length} správnych</div>
+    <div class="results-stats">
+      <div class="r-stat"><div class="rv green">${correct}</div><div class="rn">Správne</div></div>
+      <div class="r-stat"><div class="rv red">${speedState.wrong.length}</div><div class="rn">Chybné</div></div>
+      <div class="r-stat"><div class="rv blue">${speedState.score}</div><div class="rn">Body</div></div>
+    </div>
+    <div class="results-message">${speedState.score >= 2000 ? '🏆 Úžasný výsledok! Si rýchly a presný.' : speedState.score >= 1000 ? '👍 Dobrý výkon! Rýchlosť sa dá trénovať.' : '📚 Precvič si látku a skús znova!'}</div>
+    <div class="results-actions">
+      <button class="btn-retry" onclick="startSpeed()">🔄 ZOPAKOVAŤ</button>
+      <button class="btn-home" onclick="showSection('home', document.querySelectorAll('.nav button')[0])">← DOMOV</button>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+
+initMCTopics();
+</script>
+</body>
+</html>
